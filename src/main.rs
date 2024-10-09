@@ -147,10 +147,21 @@ fn main() {
                 .expect("Failed to read line");
 
             //load data
-            //TODO: Handle error if file does not exist
-            let loaddata = fs::read_to_string(format!("{}.txt", name.trim()));
+            let loaddata = fs::read_to_string(format!("{}.txt", name.trim())).unwrap_or_else(|error| {
+                if error.kind() == io::ErrorKind::NotFound {
+                    println!("File not found!");
+                    return String::new();
+                
+                } else {
+                    panic!("Error: {}", error);
+                }
+            });
 
-            let data = loaddata.expect("Failed to unwrap load data");
+            if loaddata.is_empty() {
+                continue;
+            }
+
+            let data = loaddata;
             let varables: Vec<&str> = data.lines().collect();
 
             v = Some(varables[0].parse::<f64>().expect("Failed to parse to f64"));
