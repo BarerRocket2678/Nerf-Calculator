@@ -1,7 +1,7 @@
 use plotly::common::{Marker, Mode};
 use plotly::layout::{Axis, Layout};
 use plotly::{Plot, Scatter3D};
-use std::{fs, io, io::Write, process};
+use std::{fs, io, io::Write, process, thread, time::Duration};
 
 //handles user input for f64 numbers
 fn userinputf64() -> f64 {
@@ -10,12 +10,12 @@ fn userinputf64() -> f64 {
 
         io::stdin()
             .read_line(&mut string)
-            .expect("Failed to read line");
+            .expect("Failed to read line!");
 
         //break out of loop of the input can be parsed into an f64
         match string.trim().parse::<f64>() {
             Ok(num) => return num,
-            Err(_) => println!("Invalid input. Enter a valid number"),
+            Err(_) => println!("Invalid input. Enter a valid float / integer value."),
         }
     }
 }
@@ -27,12 +27,12 @@ fn userinputi32() -> i32 {
 
         io::stdin()
             .read_line(&mut string)
-            .expect("Failed to read line");
+            .expect("Failed to read line!");
 
         //break out of loop of the input can be parsed into an i32
         match string.trim().parse::<i32>() {
             Ok(num) => return num,
-            Err(_) => println!("Invalid input. Enter a valid number"),
+            Err(_) => println!("Invalid input. Enter a valid integer value."),
         }
     }
 }
@@ -47,11 +47,11 @@ fn main() {
 
     loop {
         println!("1. New blaster\n2. Load blaster\n3. Test\n4. Exit\n: ");
-        let mode = userinputi32();
+        let mode: i32 = userinputi32();
 
         if mode == 1 {
             println!("1. Manually Enter muzzle velocity\n2. Calculate muzzle velocity");
-            let mv_mode = userinputi32();
+            let mv_mode: i32 = userinputi32();
 
             if mv_mode == 1 {
                 println!("Enter the mass of the dart (grams): ");
@@ -61,23 +61,23 @@ fn main() {
             } else {
                 //spring constant = absolute value of (spring force / (compressed length - relaxed length) * 0.0254 (to convert to meters))
                 println!("Enter the Force of the Spring (kilograms): ");
-                let f = userinputf64() * 9.81;
+                let f: f64 = userinputf64() * 9.81;
                 println!("Enter the relaxed length of the spring (inches): ");
-                let d_r = userinputf64();
+                let d_r: f64 = userinputf64();
                 println!("Enter the compressed length of the spring (inches): ");
-                let d_c = userinputf64();
-                let x = (d_c - d_r) * 0.0254;
-                let k = (f / x).abs();
+                let d_c: f64 = userinputf64();
+                let x: f64 = (d_c - d_r) * 0.0254;
+                let k: f64 = (f / x).abs();
 
                 //potential energy = 0.5(spring constant * (relaxed length - compressed length) ^ 2))
-                let pe = 0.5 * (k * (x * x));
+                let pe: f64 = 0.5 * (k * (x * x));
 
                 println!("Enter the mass of the dart (grams): ");
                 m = Some(userinputf64() / 1000.0);
                 println!("Enter the efficency of the blaster (0 to 1) (0.20 to 0.40 is normal)");
-                let n = userinputf64();
+                let n: f64 = userinputf64();
                 //kinetic energy = potential energy * efficency
-                let ke = pe * n;
+                let ke: f64 = pe * n;
 
                 //exit velocity = sqrt(2 * kinetic energy / mass)
                 v = Some(((2.0 * ke) / m.unwrap()).sqrt());
@@ -93,12 +93,12 @@ fn main() {
             //surface area = pi * (diameter / 2)^2
             a = Some(std::f64::consts::PI * ((d / 2.0) * (d / 2.0)));
 
-            println!("Enter name");
+            println!("Enter name: ");
             let mut name: String = String::new();
 
             std::io::stdin()
                 .read_line(&mut name)
-                .expect("Failed to read line");
+                .expect("Failed to read line!");
 
             name = name.trim().to_string();
 
@@ -140,14 +140,14 @@ fn main() {
 
         if mode == 2 {
             let mut name: String = String::new();
-            println!("Enter name");
+            println!("Enter name: ");
 
             std::io::stdin()
                 .read_line(&mut name)
-                .expect("Failed to read line");
+                .expect("Failed to read line!");
 
             //load data
-            let loaddata = fs::read_to_string(format!("{}.txt", name.trim())).unwrap_or_else(|error| {
+            let loaddata: String = fs::read_to_string(format!("{}.txt", name.trim())).unwrap_or_else(|error| {
                 if error.kind() == io::ErrorKind::NotFound {
                     println!("File not found!");
                     return String::new();
@@ -164,11 +164,11 @@ fn main() {
             let data = loaddata;
             let varables: Vec<&str> = data.lines().collect();
 
-            v = Some(varables[0].parse::<f64>().expect("Failed to parse to f64"));
-            p = Some(varables[1].parse::<f64>().expect("Failed to parse to f64"));
-            cd = Some(varables[2].parse::<f64>().expect("Failed to parse to f64"));
-            a = Some(varables[3].parse::<f64>().expect("Failed to parse to f64"));
-            m = Some(varables[4].parse::<f64>().expect("Failed to parse to f64"));
+            v = Some(varables[0].parse::<f64>().expect("Failed to parse to f64!"));
+            p = Some(varables[1].parse::<f64>().expect("Failed to parse to f64!"));
+            cd = Some(varables[2].parse::<f64>().expect("Failed to parse to f64!"));
+            a = Some(varables[3].parse::<f64>().expect("Failed to parse to f64!"));
+            m = Some(varables[4].parse::<f64>().expect("Failed to parse to f64!"));
 
             selected = true;
         }
@@ -193,8 +193,8 @@ fn main() {
                 let mut ang: f64 = 0.0;
 
                 while ang <= 90.0 {
-                    let ang_radians = ang * (std::f64::consts::PI / 180.0);
-                    let mut h = initial_height;
+                    let ang_radians: f64 = ang * (std::f64::consts::PI / 180.0);
+                    let mut h: f64 = initial_height;
                     print!("\x1B[2J\x1B[1;1H"); //clear screen
                     println!("Progress: {}%", ((ang / 90.0) * 100.0).round());
 
@@ -271,7 +271,7 @@ fn main() {
                     (v.unwrap_or_else(|| { 21.0 })) * 3.281
                 );
 
-                let index_max = all_distances //find max distance
+                let index_max: Option<(usize, &f64)> = all_distances //find max distance
                     .iter()
                     .enumerate()
                     .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap());
@@ -375,13 +375,14 @@ fn main() {
                 plot.add_trace(scatter);
 
                 plot.write_html(graph_file);
-                plot.show();
 
                 println!("X-axis: {}", x_axis_title);
                 println!("Y-axis: {}", y_axis_title);
                 println!("Z-axis: Angle");
+                thread::sleep(Duration::from_secs(1));
+                plot.show();
             } else {
-                println!("Select a blaster");
+                println!("Select a blaster!");
             }
         }
 
