@@ -1,7 +1,7 @@
 use plotly::common::{Marker, Mode};
 use plotly::layout::{Axis, Layout};
 use plotly::{Plot, Scatter3D};
-use std::{fs, io, io::Write, process, thread, time::Duration};
+use std::{fs, io, io::Write, process, thread, time::Duration, mem::size_of_val};
 
 //handles user input for f64 numbers
 fn userinputf64() -> f64 {
@@ -352,6 +352,51 @@ fn main() {
                     x.push(f64::NAN);
                     y.push(f64::NAN);
                     z.push(f64::NAN);
+                }
+                //Trim every 100th value untill data is less than 7mb
+                println!("Trimmming...");
+                let mut data_size:f64 = (size_of_val(&*x) as f64 + size_of_val(&*y) as f64 + size_of_val(&*z) as f64) / 1048576.0; 
+                if data_size > 12.0 {
+                    let mut new_x:Vec<f64> = vec![];
+                    let mut new_y:Vec<f64> = vec![];
+                    let mut new_z:Vec<f64> = vec![];
+                    let mut i:usize;
+                    while data_size > 12.0 {
+                        i = 0;
+                        new_x.clear();
+                        while i < x.len(){
+                            if i % 100 != 0 {
+                                new_x.push(x[i]);
+                            }
+                            i = i + 1;
+                        }
+                        x = new_x.clone();
+
+                        i = 0;
+                        new_y.clear();
+
+                        while i < y.len(){
+                            if i % 100 != 0 {
+                                new_y.push(y[i]);
+                            }
+                            i = i + 1;
+                        }
+                        y = new_y.clone();
+                        
+                        i = 0;
+                        new_z.clear();
+                        while i < z.len(){
+                            if i % 100 != 0 {        
+                                new_z.push(z[i]);
+                            }
+                            i = i + 1;
+                        }
+                        z = new_z.clone();
+                        
+
+                        data_size = (size_of_val(&*x) as f64 + size_of_val(&*y) as f64 + size_of_val(&*z) as f64)/1048576.0;
+                        
+                    }
                 }
 
                 let graph_name = format!("{} vs {} vs angle", x_axis_title, y_axis_title);
