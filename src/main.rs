@@ -184,6 +184,11 @@ fn main() {
                 println!("Enter angle step (degrees, a value of 1 is reccomended, as lower values may cause graphs to not load) (lower values lead to higher accuracy but longer computational time, as well as higher RAM usage): ");
                 let ang_step: f64 = userinputf64();
 
+                println!("Enter max angle (lower values lead to shorter computational time, as well as lower RAM usage. Don't set above 90 degrees!): ");
+                let ang_max: f64 = userinputf64();
+
+
+
                 let mut all_distances: Vec<f64> = vec![];
                 let mut all_positions: Vec<Vec<f64>> = vec![];
                 let mut all_velocities: Vec<Vec<f64>> = vec![];
@@ -192,11 +197,11 @@ fn main() {
 
                 let mut ang: f64 = 0.0;
 
-                while ang <= 90.0 {
+                while ang <= ang_max {
                     let ang_radians: f64 = ang * (std::f64::consts::PI / 180.0);
                     let mut h: f64 = initial_height;
                     print!("\x1B[2J\x1B[1;1H"); //clear screen
-                    println!("Progress: {}%", ((ang / 90.0) * 100.0).round());
+                    println!("Progress: {}%", ((ang / ang_max) * 100.0).round());
 
                     let mut distance: f64 = 0.0;
                     let mut positions: Vec<f64> = vec![];
@@ -353,15 +358,15 @@ fn main() {
                     y.push(f64::NAN);
                     z.push(f64::NAN);
                 }
-                //Trim every 100th value untill data is less than 7mb
+                //Trim every 100th value untill data is less than 8mb
                 println!("Trimmming...");
                 let mut data_size:f64 = (size_of_val(&*x) as f64 + size_of_val(&*y) as f64 + size_of_val(&*z) as f64) / 1048576.0; 
-                if data_size > 12.0 {
+                if data_size > 1.0 {
                     let mut new_x:Vec<f64> = vec![];
                     let mut new_y:Vec<f64> = vec![];
                     let mut new_z:Vec<f64> = vec![];
                     let mut i:usize;
-                    while data_size > 12.0 {
+                    while data_size > 1.0 {
                         i = 0;
                         new_x.clear();
                         while i < x.len(){
